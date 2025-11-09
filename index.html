@@ -25,29 +25,35 @@
         padding: 30px;
         border-radius: 20px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        max-width: 500px;
+        max-width: 600px;
         width: 100%;
     }
     h1 {
       color: #4da6ff;
-      margin-bottom: 25px;
+      margin-bottom: 10px;
+    }
+    #progress {
+        color: #888;
+        margin-bottom: 20px;
+        font-size: 14px;
     }
     .pergunta {
-      font-size: 22px;
-      margin-bottom: 30px;
+      font-size: 20px;
+      margin-bottom: 25px;
       font-weight: 600;
       line-height: 1.4;
+      min-height: 60px;
     }
     button {
       display: block;
       width: 100%;
-      margin: 12px auto;
-      padding: 15px 20px;
+      margin: 10px auto;
+      padding: 12px 20px;
       border: none;
       border-radius: 12px;
-      background-color: #333;
+      background-color: #3a3a3a;
       color: white;
-      font-size: 18px;
+      font-size: 16px;
       cursor: pointer;
       transition: all 0.2s ease;
       text-align: left;
@@ -57,18 +63,25 @@
       transform: translateY(-2px);
     }
     .mensagem {
-      font-size: 20px;
+      font-size: 18px;
       margin-top: 25px;
       font-weight: bold;
-      min-height: 30px; /* Para não pular quando aparecer texto */
+      min-height: 30px;
     }
     .correct { color: #00ff88; }
     .incorrect { color: #ff5555; }
+    
+    /* Scroll para muitas opções se necessário em telas pequenas */
+    #opcoes {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
   </style>
 </head>
 <body>
   <div id="game-container">
       <h1>Quiz: Cidadania & Ética</h1>
+      <div id="progress"></div>
       <div id="game">
         <div class="pergunta" id="pergunta">Carregando...</div>
         <div id="opcoes"></div>
@@ -77,29 +90,89 @@
   </div>
 
   <script>
-    const perguntas = [
-      { q: "O que é cidadania?", op: ["Apenas o direito de votar", "Dever de trabalhar para o governo", "Participação ativa na vida política e social"], correta: 2 },
-      { q: "A moral está principalmente relacionada a:", op: ["Leis escritas na constituição", "Costumes, valores e normas culturais", "Regras religiosas apenas"], correta: 1 },
+    // Banco de dados com 50 perguntas
+    const bancoDePerguntas = [
+      { q: "O que é cidadania?", op: ["Direito apenas de votar", "Dever de trabalhar para o governo", "Participação ativa na vida política e social, com direitos e deveres"], correta: 2 },
+      { q: "A moral está principalmente relacionada a:", op: ["Leis escritas na constituição", "Costumes, valores e normas de um grupo social", "Regras religiosas apenas"], correta: 1 },
       { q: "O que melhor define ética?", op: ["Reflexão sobre os princípios que orientam a moral", "Fazer o que eu quero sem ser pego", "Seguir a maioria sem questionar"], correta: 0 },
       { q: "Qual destas atitudes demonstra falta de civismo?", op: ["Furar a fila no supermercado", "Ajudar um idoso a atravessar a rua", "Separar o lixo para reciclagem"], correta: 0 },
-      { q: "Por que pagar impostos é um dever do cidadão?", op: ["Para o governo ficar rico", "Para financiar serviços públicos como saúde e educação", "Para não ser preso apenas"], correta: 1 }
+      { q: "Por que pagar impostos é um dever do cidadão?", op: ["Para o governo ficar rico", "Para financiar serviços públicos como saúde, segurança e educação", "Apenas para não ser preso"], correta: 1 },
+      { q: "O que é democracia?", op: ["Governo de um só líder", "Governo onde o poder emana do povo", "Ausência de governo"], correta: 1 },
+      { q: "Vandalizar um telefone público ou banco de praça é:", op: ["Uma forma válida de protesto", "Um crime contra o patrimônio público que prejudica a todos", "Aceitável se ninguém estiver vendo"], correta: 1 },
+      { q: "A liberdade de expressão permite que você:", op: ["Diga qualquer coisa, inclusive ofensas e mentiras", "Expresse suas opiniões, desde que não viole os direitos dos outros ou cometa crimes", "Fale apenas o que o governo permite"], correta: 1 },
+      { q: "O que é empatia?", op: ["Concordar com tudo o que os outros dizem", "A capacidade de se colocar no lugar do outro e entender seus sentimentos", "Sentir pena de alguém"], correta: 1 },
+      { q: "Ao encontrar uma carteira na rua com documentos e dinheiro, a atitude ética é:", op: ["Ficar com o dinheiro e jogar os documentos fora", "Tentar encontrar o dono ou entregar às autoridades", "Pegar o dinheiro como 'recompensa' e devolver só os documentos"], correta: 1 },
+      { q: "O que são Direitos Humanos?", op: ["Direitos garantidos apenas para pessoas honestas", "Direitos fundamentais de todas as pessoas, independente de raça, sexo, nacionalidade ou religião", "Privilégios dados pelo governo a alguns grupos"], correta: 1 },
+      { q: "Qual a importância do voto consciente?", op: ["Escolher o candidato mais bonito", "Votar em quem promete favores pessoais", "Pesquisar as propostas e histórico dos candidatos para melhorar o país"], correta: 2 },
+      { q: "O que caracteriza a corrupção?", op: ["Apenas o desvio de grandes somas de dinheiro público", "Usar uma posição de poder para obter vantagens pessoais indevidas, em qualquer escala", "Um erro administrativo sem intenção"], correta: 1 },
+      { q: "Respeitar as leis de trânsito, mesmo como pedestre, é um ato de:", op: ["Medo de multa", "Cidadania e respeito à vida", "Perda de tempo"], correta: 1 },
+      { q: "O que é sustentabilidade?", op: ["Usar todos os recursos naturais agora antes que acabem", "Suprir as necessidades atuais sem comprometer as gerações futuras", "Parar de consumir qualquer produto industrializado"], correta: 1 },
+      { q: "O 'jeitinho brasileiro', quando usado para burlar regras e obter vantagens, é:", op: ["Uma demonstração de criatividade aceitável", "Uma forma de corrupção do dia a dia que prejudica a coletividade", "Necessário para sobreviver"], correta: 1 },
+      { q: "Qual é o papel da Constituição de um país?", op: ["Ser um livro de sugestões para os governantes", "É a lei máxima que define os direitos e deveres dos cidadãos e a organização do Estado", "Servir apenas para advogados consultarem"], correta: 1 },
+      { q: "O que é 'Fake News' e como ela afeta a cidadania?", op: ["São notícias engraçadas sem impacto real", "São notícias falsas que manipulam a opinião pública e prejudicam a democracia", "É qualquer notícia que eu não concorde"], correta: 1 },
+      { q: "Plágio (copiar trabalho dos outros sem dar crédito) na escola é:", op: ["Uma estratégia inteligente para economizar tempo", "Antiético e uma forma de desonestidade intelectual", "Aceitável se o professor não perceber"], correta: 1 },
+      { q: "Solidariedade é:", op: ["Ajudar apenas amigos e familiares", "Cooperação e preocupação mútua entre as pessoas, especialmente em dificuldades", "Esperar que o governo resolva tudo"], correta: 1 },
+      { q: "O que significa 'Estado Laico'?", op: ["Um país que proíbe religiões", "Um país onde o governo não adota nem interfere em nenhuma religião oficial", "Um país onde apenas uma religião é permitida"], correta: 1 },
+      { q: "Discriminação racial é:", op: ["Uma opinião pessoal que deve ser respeitada", "Crime e uma violação grave dos direitos humanos", "Apenas uma brincadeira de mau gosto"], correta: 1 },
+      { q: "Qual a função do Poder Legislativo (deputados, senadores, vereadores)?", op: ["Julgar criminosos", "Criar e aprovar leis, e fiscalizar o Executivo", "Executar obras públicas diretamente"], correta: 1 },
+      { q: "Por que a diversidade cultural é importante?", op: ["Ela atrapalha a união do país", "Enriquece a sociedade com diferentes perspectivas, conhecimentos e tradições", "Não tem importância prática"], correta: 1 },
+      { q: "O que é 'meritocracia'?", op: ["Sistema onde todos ganham o mesmo salário", "Sistema onde o progresso é baseado no mérito, esforço e talento individual", "Sistema onde os cargos são passados de pai para filho"], correta: 1 },
+      { q: "Jogar lixo na rua contribui para:", op: ["Dar emprego aos garis", "Enchentes, poluição e doenças", "Adubar o solo urbano"], correta: 1 },
+      { q: "O que é bullying?", op: ["Brincadeiras saudáveis entre amigos", "Atos repetidos de intimidação ou agressão física/verbal contra alguém", "Uma fase normal da adolescência que fortalece o caráter"], correta: 1 },
+      { q: "Quando você vê alguém sendo injustiçado, a atitude cidadã é:", op: ["Filmar e postar na internet para ganhar likes", "Ignorar para não se meter em problemas", "Tentar ajudar de forma segura ou denunciar às autoridades competentes"], correta: 2 },
+      { q: "Sonegar impostos (não pagar o que deve) resulta em:", op: ["Mais dinheiro para todos", "Menos recursos para saúde, educação e segurança pública", "Apenas prejuízo para os políticos"], correta: 1 },
+      { q: "O que é inclusão social?", op: ["Garantir que todos, especialmente os marginalizados, tenham acesso às mesmas oportunidades e direitos", "Obrigar todos a pensarem igual", "Dar dinheiro para todos pararem de trabalhar"], correta: 0 },
+      { q: "Liberdade religiosa significa:", op: ["Você pode obrigar os outros a seguirem sua fé", "Todos têm o direito de escolher sua religião, ou não ter nenhuma, sem ser discriminado", "Apenas as religiões maiores têm direitos garantidos"], correta: 1 },
+      { q: "O que é patrimônio histórico e cultural?", op: ["Apenas prédios velhos que deveriam ser derrubados", "Bens materiais ou imateriais que preservam a memória e identidade de um povo", "Coisas que só interessam a historiadores"], correta: 1 },
+      { q: "A responsabilidade pelo meio ambiente é de quem?", op: ["Apenas do governo e das grandes empresas", "Apenas das ONGs", "De todos os cidadãos, empresas e governos"], correta: 2 },
+      { q: "O que é o Estatuto da Criança e do Adolescente (ECA)?", op: ["Uma lei que proíbe os pais de educarem seus filhos", "Um conjunto de normas que protege os direitos integrais das crianças e adolescentes", "Uma sugestão de como tratar crianças, sem força de lei"], correta: 1 },
+      { q: "Furto de energia elétrica ('gato') é:", op: ["Uma forma esperta de economizar", "Crime que encarece a conta de luz para todos os outros cidadãos honestos", "Justo se a tarifa for alta"], correta: 1 },
+      { q: "O voto no Brasil é:", op: ["Facultativo para todos", "Obrigatório para alfabetizados entre 18 e 70 anos", "Proibido para maiores de 70 anos"], correta: 1 },
+      { q: "O que é nepotismo?", op: ["Favorecer parentes em cargos públicos em vez de contratar por competência", "Um tipo de governo antigo", "O ato de negociar com outros países"], correta: 0 },
+      { q: "Qual a atitude correta ao ouvir música alta em casa?", op: ["Aumentar o volume o quanto quiser, a casa é sua", "Respeitar os vizinhos e a lei do silêncio, mantendo um volume razoável", "Só baixar se a polícia chegar"], correta: 1 },
+      { q: "O que é trabalho voluntário?", op: ["Trabalho escravo moderno", "Atividade não remunerada prestada em benefício da comunidade ou de causas sociais", "Estágio obrigatório da escola"], correta: 1 },
+      { q: "Para combater a dengue, o cidadão deve:", op: ["Esperar a prefeitura passar veneno", "Eliminar água parada em sua própria casa e cobrar ações da vizinhança", "Ignorar, pois é apenas um mosquito"], correta: 1 },
+      { q: "O que significa 'acessibilidade'?", op: ["Ter acesso à internet rápida", "Garantir condições para que pessoas com deficiência possam participar plenamente da sociedade", "Facilidade para comprar carros"], correta: 1 },
+      { q: "Fazer justiça com as próprias mãos é:", op: ["Um ato de coragem e heroísmo", "Crime e um retrocesso à barbárie, devendo-se usar os meios legais", "Necessário quando a polícia demora"], correta: 1 },
+      { q: "O que é consumo consciente?", op: ["Comprar tudo o que está em promoção", "Refletir sobre a necessidade, origem e impacto do que se compra", "Parar de comprar qualquer coisa"], correta: 1 },
+      { q: "A participação em conselhos comunitários ou de escola é:", op: ["Perda de tempo", "Uma forma importante de exercer a cidadania localmente", "Apenas para quem quer ser político"], correta: 1 },
+      { q: "O que é transparência pública?", op: ["O governo disponibilizar informações claras sobre gastos e decisões para a população", "Paredes de vidro nos prédios públicos", "O direito do governo de saber tudo sobre sua vida"], correta: 0 },
+      { q: "Mentir no currículo para conseguir um emprego é:", op: ["Esperteza necessária no mercado competitivo", "Antiético e pode levar à demissão por justa causa", "Aceitável se todo mundo faz"], correta: 1 },
+      { q: "O que fazer se receber um troco a mais por engano?", op: ["Ficar quieto e aproveitar o lucro", "Devolver imediatamente, pois o dinheiro não é seu", "Doar para a caridade para compensar"], correta: 1 },
+      { q: "Qual é a 'Regra de Ouro' da ética presente em muitas culturas?", op: ["Faça tudo para vencer", "Não faça aos outros o que não gostaria que fizessem a você", "Os fins justificam os meios"], correta: 1 },
+      { q: "Ser um cidadão ativo significa:", op: ["Apenas não cometer crimes", "Reclamar de tudo nas redes sociais", "Informar-se, participar, cumprir deveres e lutar por direitos coletivos"], correta: 2 },
+      { q: "A educação é importante para a cidadania porque:", op: ["Garante que você ficará rico", "Desenvolve o pensamento crítico e o conhecimento necessário para participar da sociedade", "É obrigatória por lei apenas"], correta: 1 }
     ];
 
+    // Função para embaralhar as perguntas (Fisher-Yates Shuffle)
+    function embaralhar(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // Inicialização
+    let perguntas = embaralhar([...bancoDePerguntas]); // Cria uma cópia embaralhada
     let indice = 0;
     let pontos = 0;
-    let respondido = false; // Para evitar cliques múltiplos
+    let respondido = false;
 
     const perguntaEl = document.getElementById("pergunta");
     const opcoesEl = document.getElementById("opcoes");
     const msgEl = document.getElementById("mensagem");
+    const progressEl = document.getElementById("progress");
 
     function mostrarPergunta() {
       respondido = false;
       const p = perguntas[indice];
-      perguntaEl.textContent = `${indice + 1}. ${p.q}`;
+      
+      progressEl.textContent = `Pergunta ${indice + 1} de ${perguntas.length}`;
+      perguntaEl.textContent = p.q;
       opcoesEl.innerHTML = "";
       msgEl.textContent = "";
-      msgEl.className = "mensagem"; // Resetar classes de cor
+      msgEl.className = "mensagem";
 
       p.op.forEach((opcao, i) => {
         const btn = document.createElement("button");
@@ -114,69 +187,77 @@
       respondido = true;
 
       const p = perguntas[indice];
-      
-      // Mostrar qual era a correta se errou
       const botoes = opcoesEl.getElementsByTagName("button");
+      
       if (i === p.correta) {
         pontos++;
-        msgEl.textContent = "✅ Muito bem! Resposta correta!";
+        msgEl.textContent = "✅ Resposta Certa!";
         msgEl.classList.add("correct");
         btnClicado.style.backgroundColor = "#00aa55";
       } else {
-        msgEl.textContent = "❌ Ops! Não foi desta vez.";
+        msgEl.textContent = "❌ Resposta Errada!";
         msgEl.classList.add("incorrect");
         btnClicado.style.backgroundColor = "#aa0000";
-        botoes[p.correta].style.backgroundColor = "#00aa55"; // Mostra a correta
+        botoes[p.correta].style.backgroundColor = "#00aa55";
       }
 
       indice++;
+      // Tempo reduzido para 1.5s para o jogo fluir melhor com 50 perguntas
       setTimeout(() => {
         if (indice < perguntas.length) {
           mostrarPergunta();
         } else {
           finalizarJogo();
         }
-      }, 2000);
+      }, 1500);
     }
 
     function finalizarJogo() {
-        perguntaEl.textContent = "🎉 Fim do Jogo!";
+        progressEl.textContent = "Finalizado";
+        perguntaEl.textContent = "🎉 Fim da Jornada!";
+        
+        let mensagemFinal = "";
+        let corFinal = "";
+        const aproveitamento = (pontos / perguntas.length) * 100;
+
+        if (aproveitamento >= 90) {
+            mensagemFinal = "Excelente! Você é um mestre da cidadania!";
+            corFinal = "#00ff88";
+        } else if (aproveitamento >= 70) {
+            mensagemFinal = "Muito bom! Você tem uma ótima noção de ética e civismo.";
+            corFinal = "#ffd700";
+        } else if (aproveitamento >= 50) {
+             mensagemFinal = "Na média. Você conhece o básico, mas pode melhorar.";
+             corFinal = "#ffa500";
+        } else {
+             mensagemFinal = "Precisamos estudar mais! A cidadania precisa de você mais informado.";
+             corFinal = "#ff5555";
+        }
+
         opcoesEl.innerHTML = `
-            <div style="font-size: 60px; margin: 20px 0;">🏆</div>
-            <p>Você acertou <strong>${pontos}</strong> de <strong>${perguntas.length}</strong> perguntas.</p>
+            <div style="font-size: 80px; margin: 20px 0;">🏆</div>
+            <h2 style="color: ${corFinal}; margin: 10px 0;">${pontos} / ${perguntas.length} acertos</h2>
+            <p style="font-size: 18px; margin-top: 20px;">${mensagemFinal}</p>
         `;
         msgEl.textContent = "";
-        
-        // Mensagem final baseada na pontuação
-        const finalMsg = document.createElement('p');
-        finalMsg.style.fontSize = "18px";
-        finalMsg.style.marginTop = "20px";
-        
-        if (pontos === perguntas.length) {
-            finalMsg.textContent = "Parabéns! Você é um cidadão exemplar!";
-            finalMsg.style.color = "#00ff88";
-        } else if (pontos >= perguntas.length / 2) {
-             finalMsg.textContent = "Bom trabalho! Continue a estudar sobre os seus direitos e deveres.";
-             finalMsg.style.color = "#ffd700";
-        } else {
-             finalMsg.textContent = "Que tal revisar um pouco mais sobre cidadania?";
-             finalMsg.style.color = "#ff5555";
-        }
-        opcoesEl.appendChild(finalMsg);
 
-        // Botão de reiniciar
         const restartBtn = document.createElement("button");
-        restartBtn.textContent = "Jogar Novamente";
+        restartBtn.textContent = "Jogar Novamente (Novas Perguntas)";
         restartBtn.style.backgroundColor = "#4da6ff";
-        restartBtn.style.marginTop = "30px";
-        restartBtn.onclick = () => {
-            indice = 0;
-            pontos = 0;
-            mostrarPergunta();
-        };
+        restartBtn.style.marginTop = "40px";
+        restartBtn.style.fontWeight = "bold";
+        restartBtn.onclick = reiniciarJogo;
         opcoesEl.appendChild(restartBtn);
     }
 
+    function reiniciarJogo() {
+        indice = 0;
+        pontos = 0;
+        perguntas = embaralhar([...bancoDePerguntas]); // Reembaralha ao reiniciar
+        mostrarPergunta();
+    }
+
+    // Começa o jogo
     mostrarPergunta();
   </script>
 </body>
