@@ -4,96 +4,177 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quiz Cidadania, Moral e Ética</title>
+  <!-- Carregando a font Inter para ficar mais bonito -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
       background: #1a1a1a;
-      color: white;
-      font-family: Arial, sans-serif;
+      color: #f0f0f0;
+      font-family: 'Inter', sans-serif;
       text-align: center;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    #game-container {
+        background: #2a2a2a;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        max-width: 500px;
+        width: 100%;
     }
     h1 {
-      font-size: 24px;
-      margin-bottom: 10px;
+      color: #4da6ff;
+      margin-bottom: 25px;
     }
     .pergunta {
-      font-size: 20px;
-      margin-bottom: 15px;
+      font-size: 22px;
+      margin-bottom: 30px;
+      font-weight: 600;
+      line-height: 1.4;
     }
     button {
       display: block;
-      margin: 10px auto;
-      padding: 10px 20px;
+      width: 100%;
+      margin: 12px auto;
+      padding: 15px 20px;
       border: none;
-      border-radius: 10px;
-      background-color: #007bff;
+      border-radius: 12px;
+      background-color: #333;
       color: white;
-      font-size: 16px;
+      font-size: 18px;
       cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #4da6ff;
+      transform: translateY(-2px);
     }
     .mensagem {
-      font-size: 18px;
-      margin-top: 20px;
-      color: #00ff88;
+      font-size: 20px;
+      margin-top: 25px;
+      font-weight: bold;
+      min-height: 30px; /* Para não pular quando aparecer texto */
     }
+    .correct { color: #00ff88; }
+    .incorrect { color: #ff5555; }
   </style>
 </head>
 <body>
-  <h1>Quiz: Cidadania, Moral e Ética</h1>
-  <div id="game">
-    <div class="pergunta" id="pergunta">Carregando...</div>
-    <div id="opcoes"></div>
-    <div class="mensagem" id="mensagem"></div>
+  <div id="game-container">
+      <h1>Quiz: Cidadania & Ética</h1>
+      <div id="game">
+        <div class="pergunta" id="pergunta">Carregando...</div>
+        <div id="opcoes"></div>
+        <div class="mensagem" id="mensagem"></div>
+      </div>
   </div>
 
   <script>
     const perguntas = [
-      { q: "O que é cidadania?", op: ["Direito de votar", "Dever de trabalhar", "Participar da vida pública"], correta: 2 },
-      { q: "A moral está relacionada a:", op: ["Leis", "Costumes e valores", "Religião"], correta: 1 },
-      { q: "O que é ética?", op: ["Conjunto de regras pessoais", "Estudo do comportamento humano", "Opinião individual"], correta: 1 },
-      // (continue suas perguntas aqui)
+      { q: "O que é cidadania?", op: ["Apenas o direito de votar", "Dever de trabalhar para o governo", "Participação ativa na vida política e social"], correta: 2 },
+      { q: "A moral está principalmente relacionada a:", op: ["Leis escritas na constituição", "Costumes, valores e normas culturais", "Regras religiosas apenas"], correta: 1 },
+      { q: "O que melhor define ética?", op: ["Reflexão sobre os princípios que orientam a moral", "Fazer o que eu quero sem ser pego", "Seguir a maioria sem questionar"], correta: 0 },
+      { q: "Qual destas atitudes demonstra falta de civismo?", op: ["Furar a fila no supermercado", "Ajudar um idoso a atravessar a rua", "Separar o lixo para reciclagem"], correta: 0 },
+      { q: "Por que pagar impostos é um dever do cidadão?", op: ["Para o governo ficar rico", "Para financiar serviços públicos como saúde e educação", "Para não ser preso apenas"], correta: 1 }
     ];
 
     let indice = 0;
     let pontos = 0;
+    let respondido = false; // Para evitar cliques múltiplos
 
     const perguntaEl = document.getElementById("pergunta");
     const opcoesEl = document.getElementById("opcoes");
     const msgEl = document.getElementById("mensagem");
 
     function mostrarPergunta() {
+      respondido = false;
       const p = perguntas[indice];
-      perguntaEl.textContent = Fase ${indice + 1} — ${p.q};
+      perguntaEl.textContent = `${indice + 1}. ${p.q}`;
       opcoesEl.innerHTML = "";
       msgEl.textContent = "";
+      msgEl.className = "mensagem"; // Resetar classes de cor
+
       p.op.forEach((opcao, i) => {
         const btn = document.createElement("button");
         btn.textContent = opcao;
-        btn.onclick = () => verificar(i);
+        btn.onclick = () => verificar(i, btn);
         opcoesEl.appendChild(btn);
       });
     }
 
-    function verificar(i) {
+    function verificar(i, btnClicado) {
+      if (respondido) return;
+      respondido = true;
+
       const p = perguntas[indice];
+      
+      // Mostrar qual era a correta se errou
+      const botoes = opcoesEl.getElementsByTagName("button");
       if (i === p.correta) {
         pontos++;
-        msgEl.textContent = "✅ Muito bem! Continue assim!";
+        msgEl.textContent = "✅ Muito bem! Resposta correta!";
+        msgEl.classList.add("correct");
+        btnClicado.style.backgroundColor = "#00aa55";
       } else {
-        msgEl.textContent = "❌ Não desanime! Você está aprendendo!";
+        msgEl.textContent = "❌ Ops! Não foi desta vez.";
+        msgEl.classList.add("incorrect");
+        btnClicado.style.backgroundColor = "#aa0000";
+        botoes[p.correta].style.backgroundColor = "#00aa55"; // Mostra a correta
       }
 
       indice++;
-      if (indice < perguntas.length) {
-        setTimeout(mostrarPergunta, 1500);
-      } else {
-        perguntaEl.textContent = Fim do jogo!;
-        opcoesEl.innerHTML = "";
-        msgEl.textContent = Você acertou ${pontos} de ${perguntas.length} perguntas.;
-      }
+      setTimeout(() => {
+        if (indice < perguntas.length) {
+          mostrarPergunta();
+        } else {
+          finalizarJogo();
+        }
+      }, 2000);
+    }
+
+    function finalizarJogo() {
+        perguntaEl.textContent = "🎉 Fim do Jogo!";
+        opcoesEl.innerHTML = `
+            <div style="font-size: 60px; margin: 20px 0;">🏆</div>
+            <p>Você acertou <strong>${pontos}</strong> de <strong>${perguntas.length}</strong> perguntas.</p>
+        `;
+        msgEl.textContent = "";
+        
+        // Mensagem final baseada na pontuação
+        const finalMsg = document.createElement('p');
+        finalMsg.style.fontSize = "18px";
+        finalMsg.style.marginTop = "20px";
+        
+        if (pontos === perguntas.length) {
+            finalMsg.textContent = "Parabéns! Você é um cidadão exemplar!";
+            finalMsg.style.color = "#00ff88";
+        } else if (pontos >= perguntas.length / 2) {
+             finalMsg.textContent = "Bom trabalho! Continue a estudar sobre os seus direitos e deveres.";
+             finalMsg.style.color = "#ffd700";
+        } else {
+             finalMsg.textContent = "Que tal revisar um pouco mais sobre cidadania?";
+             finalMsg.style.color = "#ff5555";
+        }
+        opcoesEl.appendChild(finalMsg);
+
+        // Botão de reiniciar
+        const restartBtn = document.createElement("button");
+        restartBtn.textContent = "Jogar Novamente";
+        restartBtn.style.backgroundColor = "#4da6ff";
+        restartBtn.style.marginTop = "30px";
+        restartBtn.onclick = () => {
+            indice = 0;
+            pontos = 0;
+            mostrarPergunta();
+        };
+        opcoesEl.appendChild(restartBtn);
     }
 
     mostrarPergunta();
