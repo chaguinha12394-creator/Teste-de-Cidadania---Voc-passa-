@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz — Cidadania, Moral e Ética (100)</title>
+  <style>
+    :root{--bg:#f3f6fb;--card:#fff;--accent:#2563eb;--good:#2ea44f;--bad:#e5534b}
+    body{font-family:Inter, Arial, sans-serif;background:var(--bg);margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{width:100%;max-width:760px;background:var(--card);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.08);padding:24px}
+    h1{margin:0 0 6px;font-size:22px}
+    .desc{color:#556;text-align:left;margin-bottom:18px}
+    .pergunta{font-size:18px;margin:18px 0}
+    .opcoes{display:flex;flex-direction:column;gap:10px}
+    .opcao{padding:12px 14px;border-radius:10px;border:1px solid #e8eef8;background:#fff;cursor:pointer;text-align:left;font-size:16px}
+    .opcao:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(37,99,235,0.08)}
+    .opcao.certa{background:#e9f8ef;border-color:var(--good)}
+    .opcao.errada{background:#fff0f0;border-color:var(--bad)}
+    .botoes{display:flex;gap:10px;margin-top:16px;align-items:center}
+    button{padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+    .btn-next{background:var(--accent);color:#fff}
+    .btn-restart{background:#efefef}
+    .status{margin-top:14px;font-weight:600}
+    .prog{height:10px;background:#eef3fb;border-radius:999px;overflow:hidden;margin-top:12px}
+    .bar{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+    .footer{margin-top:14px;color:#667;font-size:13px;text-align:center}
+    @media(max-width:520px){.card{padding:16px}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Quiz: Cidadania, Moral e Ética — 100 Perguntas</h1>
+    <div class="desc">Responda fase a fase. Depois de cada resposta você verá uma palavra de incentivo. Boa sorte!</div>
+
+    <div id="jogo">
+      <div class="prog"><span class="bar" id="bar"></span></div>
+      <p class="pergunta" id="pergunta">Carregando...</p>
+      <div id="opcoes" class="opcoes"></div>
+
+      <div class="botoes">
+        <button id="nextBtn" class="btn-next" style="display:none">Próxima</button>
+        <button id="reiniciarBtn" class="btn-restart" style="display:none">Reiniciar fase</button>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
+
+    <div id="fim" style="display:none;text-align:center">
+      <h2>Parabéns — você terminou o quiz!</h2>
+      <p id="resultadoFinal"></p>
+      <button id="jogarNovamente" class="btn-next">Jogar novamente</button>
+    </div>
+
+    <div class="footer">Para editar perguntas, abra o arquivo <code>index.html</code> e altere o array <code>perguntas</code>.</div>
+  </div>
+
+  <script>
+    /* =======================
+       ARRAY DE 100 PERGUNTAS
+       Cada item: { q: "pergunta", o: ["A","B","C"], c: indice_correta }
+       ======================= */
+    const perguntas = [
+      { q: "O que significa exercer a cidadania?", o: ["Ter direitos e deveres","Apenas ter documentos","Viver na cidade"], c: 0 },
+      { q: "Qual é uma atitude ética?", o: ["Dizer a verdade mesmo quando difícil","Trapacear para ganhar","Ignorar os outros"], c: 0 },
+      { q: "O que é empatia?", o: ["Sentir nojo do outro","Colocar-se no lugar do outro","Dar ordens sempre"], c: 1 },
+      { q: "Votar é:", o: ["Um exercício de cidadania","Só uma formalidade sem importância","Ilegal"], c: 0 },
+      { q: "Qual órgão faz leis no Brasil?", o: ["Legislativo","Judiciário","Ministério da Saúde"], c: 0 },
+      { q: "Respeito às leis é:", o: ["Obrigatório para todos","Opcional só para líderes","Somente para adultos"], c: 0 },
+      { q: "O que é corrupção?", o: ["Uso indevido de poder para benefício próprio","Comprar alimentos","Fazer doações"], c: 0 },
+      { q: "Denunciar injustiças demonstra:", o: ["Responsabilidade cívica","Covardia","Desinteresse"], c: 0 },
+      { q: "O que é solidariedade?", o: ["Apoiar pessoas em necessidade","Competir para vencer","Ignorar problemas alheios"], c: 0 },
+      { q: "Cumprir promessas mostra:", o: ["Integridade","Falta de planejamento","Imaturidade"], c: 0 },
+
+      { q: "Justiça significa:", o: ["Tratar as pessoas com igualdade","Favorecer amigos","Punir sem provas"], c: 0 },
+      { q: "O que é moral?", o: ["Conjunto de valores que guiam ações","Apenas leis do estado","Regras de jogo"], c: 0 },
+      { q: "Qual é um direito básico?", o: ["Educação","Ter mais leis","Ser influenciador"], c: 0 },
+      { q: "Participação comunitária é:", o: ["Importante para melhorar a cidade","Sem importância","Proibida"], c: 0 },
+      { q: "O que é responsabilidade social?", o: ["Ações que beneficiam a comunidade","Só fazer o que der lucro","Evitar vizinhos"], c: 0 },
+      { q: "Proteção ao meio ambiente é:", o: ["Cuidado com o planeta","Desperdício de recursos","Só responsabilidade do governo"], c: 0 },
+      { q: "O respeito às diferenças significa:", o: ["Aceitar e valorizar a diversidade","Tratar todos iguais sempre","Ignorar minorias"], c: 0 },
+      { q: "Cumprir prazos mostra:", o: ["Profissionalismo e respeito","Falta de criatividade","Desorganização"], c: 0 },
+      { q: "Transparência em instituições ajuda a:", o: ["Reduzir corrupção","Aumentar segredos","Impedir participação"], c: 0 },
+      { q: "O que é tolerância?", o: ["Conviver com diferenças","Impor ideias","Isolar-se"], c: 0 },
+
+      { q: "Solidariedade em crise significa:", o: ["Ajudar quem precisa","Aproveitar-se dos outros","Ignorar a situação"], c: 0 },
+      { q: "Cidadão informado faz:", o: ["Decisões conscientes","Só reclama sem saber","Desiste de votar"], c: 0 },
+      { q: "Ética profissional exige:", o: ["Honestidade e responsabilidade","Quebrar regras para lucrar","Falar mal do chefe"], c: 0 },
+      { q: "O que é discriminação?", o: ["Tratar alguém injustamente por característica","Elogiar as diferenças","Promover inclusão"], c: 0 },
+      { q: "Participar de associações comunitárias:", o: ["Fortalece a comunidade","É desperdício de tempo","Só pra receber benefícios"], c: 0 },
+      { q: "A liberdade de expressão é:", o: ["Direito que tem limites legais","Permissão para ferir sem consequência","Ausência total de regras"], c: 0 },
+      { q: "Denunciar violência é:", o: ["Proteger vítimas e prevenir crimes","Falar mal sem motivo","Criar problemas para os outros"], c: 0 },
+      { q: "O que é coerência?", o: ["Agir conforme valores que se professa","Mudar de opinião para agradar","Agir sempre ao acaso"], c: 0 },
+      { q: "Participar de eleições exige:", o: ["Informação e responsabilidade","Apenas sorte","Desinteresse"], c: 0 },
+      { q: "Cidadania digital envolve:", o: ["Uso responsável da internet","Postar qualquer coisa sem pensar","Hackear sites"], c: 0 },
+
+      { q: "O que é solidariedade intergeracional?", o: ["Cuidar das gerações mais velhas e mais novas","Só ajudar quem é da sua idade","Ignorar idosos"], c: 0 },
+      { q: "A corrupção reduz:", o: ["Confiança na sociedade","O número de problemas","A necessidade de leis"], c: 0 },
+      { q: "O que é responsabilidade individual?", o: ["Assumir consequências das próprias ações","Culpar sempre os outros","Não cumprir tarefas"], c: 0 },
+      { q: "Atos de civismo incluem:", o: ["Respeitar regras de convivência","Ignorar o espaço público","Vandalismo"], c: 0 },
+      { q: "A empatia ajuda a:", o: ["Melhorar relacionamentos","Isolar pessoas","Criar conflito"], c: 0 },
+      { q: "O que é convivência democrática?", o: ["Respeito a opiniões diversas","Impor apenas uma visão","Silenciar minorias"], c: 0 },
+      { q: "A justiça social busca:", o: ["Reduzir desigualdades","Favorecer só ricos","Manter privilégios"], c: 0 },
+      { q: "O que é assédio?", o: ["Comportamento que humilha ou pressiona outra pessoa","Elogiar um trabalho","Ajudar alguém com educação"], c: 0 },
+      { q: "Cumpra a legislação significa:", o: ["Seguir as regras estabelecidas","Ignorar regras por conveniência","Criar regras pessoais"], c: 0 },
+      { q: "O que é bem comum?", o: ["Benefício coletivo e compartilhado","Interesse de poucos","Coisa particular"], c: 0 },
+
+      { q: "Escuta ativa é:", o: ["Ouvir atentamente e compreender","Interromper sempre","Ignorar o outro"], c: 0 },
+      { q: "Solidariedade escolar inclui:", o: ["Apoiar colegas em dificuldades","Bullying","Exclusão"], c: 0 },
+      { q: "Integridade é:", o: ["Agir conforme valores morais","Ser hipócrita","Mudar de comportamento só para agradar"], c: 0 },
+      { q: "Cidadania ambiental preserva:", o: ["Recursos naturais e vida","Apenas áreas do governo","Só espaços privados"], c: 0 },
+      { q: "O que é convivência urbana responsável?", o: ["Respeitar regras e o espaço público","Só olhar para si","Invadir propriedade alheia"], c: 0 },
+      { q: "A participação juvenil pode:", o: ["Renovar a democracia","Afastar jovens da política","Diminuir debates"], c: 0 },
+      { q: "O que é atitude proativa?", o: ["Agir antes dos problemas crescerem","Esperar que outros resolvam","Só reclamar"], c: 0 },
+      { q: "A corrupção enfraquece:", o: ["Serviços públicos e confiança","Festividades locais","Cultura popular"], c: 0 },
+      { q: "Integridade intelectual é:", o: ["Respeitar créditos e fontes","Copiar trabalhos","Plagiar pesquisas"], c: 0 },
+      { q: "O que é igualdade de oportunidades?", o: ["Acesso justo a recursos e escolhas","Dar sempre o mesmo para todos","Ignorar diferenças"], c: 0 },
+
+      { q: "Transparência pública significa:", o: ["Informação acessível sobre atos do governo","Manter segredos sem razão","Proibir fiscalização"], c: 0 },
+      { q: "Atitude colaborativa é:", o: ["Trabalhar junto para objetivos comuns","Competir de forma desleal","Individualismo extremo"], c: 0 },
+      { q: "O que é meritocracia justa?", o: ["Reconhecer esforço com igualdade de chances","Dar vantagem a poucos","Ignorar contexto social"], c: 0 },
+      { q: "Educação cívica ensina:", o: ["Princípios de cidadania e direitos","Apenas matemática","Técnicas de marketing"], c: 0 },
+      { q: "O que é dever do cidadão?", o: ["Pagar impostos e cumprir leis","Fazer o que quiser","Evitar responsabilidades"], c: 0 },
+      { q: "Combater fake news exige:", o: ["Verificar fontes e checar fatos","Compartilhar tudo rápido","Ignorar notícias"], c: 0 },
+      { q: "O que é cooperação?", o: ["Trabalhar em conjunto para um objetivo","Buscar lucros individuais à custa do grupo","Competição sem regras"], c: 0 },
+      { q: "Direito à saúde é:", o: ["Acesso a serviços de saúde para todos","Somente para quem pode pagar","Favoritismo"], c: 0 },
+      { q: "O que é pluralismo?", o: ["Reconhecer múltiplas ideias e culturas","Impor uma única visão","Eliminar diversidade"], c: 0 },
+      { q: "A responsabilidade coletiva é:", o: ["Assumir tarefas em benefício do grupo","Só buscar vantagens pessoais","Negligenciar problemas comuns"], c: 0 },
+
+      { q: "Respeitar a propriedade alheia é:", o: ["Princípio de convivência","Sinal de fraqueza","Atitude desejável só às vezes"], c: 0 },
+      { q: "O que é boa-fé?", o: ["Agir com honestidade nas relações","Enganar para vencer","Omitir sempre verdades"], c: 0 },
+      { q: "Cidadania ativa envolve:", o: ["Fiscalizar e participar das decisões","Apenas consumir conteúdo","Ignorar processos públicos"], c: 0 },
+      { q: "Princípio da dignidade humana significa:", o: ["Valor intrínseco a todas as pessoas","Tratar alguns como inferiores","Exterminar direitos"], c: 0 },
+      { q: "Atitudes ambientais incluem:", o: ["Reciclar e economizar água","Desperdiçar recursos","Poluir sem consequência"], c: 0 },
+      { q: "O que é responsabilidade política?", o: ["Responder por atos públicos e escolher bem","Apenas falar mal de políticos","Ficar alheio"], c: 0 },
+      { q: "A ética medieval difere por:", o: ["Contexto histórico e valores","Ser igual à contemporânea","Não existir"], c: 0 },
+      { q: "O que é solidariedade internacional?", o: ["Apoiar povos em situações difíceis","Isolamento nacional","Concorrência agressiva"], c: 0 },
+      { q: "O respeito a minorias garante:", o: ["Inclusão e direitos iguais","Desaparecimento da cultura","Supremacia de um grupo"], c: 0 },
+      { q: "O que é honestidade intelectual?", o: ["Citar fontes e não plagiar","Usar trabalho alheio sem citar","Mentir em pesquisas"], c: 0 },
+
+      { q: "Atos de vandalismo prejudicam:", o: ["Comunidade e patrimônio","Apenas objetos sem importância","Ninguém"], c: 0 },
+      { q: "O que é falso positivo em informação?", o: ["Informação equivocada avaliada como verdadeira","Notícia verdadeira correta","Uma foto"], c: 0 },
+      { q: "A ética no esporte exige:", o: ["Jogo limpo e respeito","Trapacear para vencer","Ignorar adversários"], c: 0 },
+      { q: "O que é responsabilidade ambiental empresarial?", o: ["Ações para reduzir impacto ambiental","Ganhar mais dinheiro sem limites","Ignorar legislação"], c: 0 },
+      { q: "Cidadania digital saudável implica:", o: ["Respeito, privacidade e checagem de fatos","Ofensas e invasões","Compartilhar dados sem cuidado"], c: 0 },
+      { q: "O que é promulgação?", o: ["Ato que torna uma lei oficial","Uma ideia","Uma manifestação"], c: 0 },
+      { q: "Cidadania local se constrói com:", o: ["Ações na comunidade e participação","Só grandes políticas","Afastamento"], c: 0 },
+      { q: "O que é responsabilidade fiscal?", o: ["Gestão correta do dinheiro público","Gastar sem controle","Esconder recursos"], c: 0 },
+      { q: "A ética empresarial promove:", o: ["Práticas justas e sustentabilidade","Corrupção sistêmica","Desigualdade"], c: 0 },
+      { q: "O que é consórcio cívico?", o: ["Parcerias entre órgãos e sociedade","Grupo para vantagens ilegais","Companhia teatral"], c: 0 },
+
+      { q: "O que é cidadania global?", o: ["Consciência de direitos e deveres no mundo","Só olhar para o próprio país","Ignorar outros povos"], c: 0 },
+      { q: "O que é desigualdade social?", o: ["Diferenças de acesso a recursos e oportunidades","Variedade cultural","Competição saudável"], c: 0 },
+      { q: "O que é prestação de contas?", o: ["Explicar uso de recursos e decisões","Ocultar dados","Fazer promessas vazias"], c: 0 },
+      { q: "Altruísmo é:", o: ["Atuar pelo bem do outro sem esperar retorno","Agir só por interesse","Competir sem limites"], c: 0 },
+      { q: "Livros e educação promovem:", o: ["Pensamento crítico e cidadania","Ignorância coletiva","Isolamento"], c: 0 },
+      { q: "A escuta comunitária faz:", o: ["Fortalece decisões locais","Aumenta conflitos","Desestimula participação"], c: 0 },
+      { q: "O que é princípio republicano?", o: ["Soberania popular e Estado de Direito","Monarquia absoluta","Autoritarismo"], c: 0 },
+      { q: "Ética pessoal cobre:", o: ["Atitudes no dia a dia","Apenas leis","Regra de trânsito"], c: 0 },
+      { q: "O que é responsabilidade democrática?", o: ["Exigir transparência e participar","Apenas criticar sem ação","Viver apático"], c: 0 },
+      { q: "Cidadania escolar incentiva:", o: ["Respeito e participação na escola","Bullying e exclusão","Fuga das responsabilidades"], c: 0 },
+
+      { q: "O que é pluralidade de ideias?", o: ["Conviver com opiniões diferentes","Aceitar apenas uma visão","Silenciar minorias"], c: 0 },
+      { q: "A ética na comunicação exige:", o: ["Verdade e clareza","Desinformação","Manipulação"], c: 0 },
+      { q: "O que é acesso à justiça?", o: ["Possibilidade de buscar direitos na lei","Somente para ricos","Sem instrumentos legais"], c: 0 },
+      { q: "Proteger espaços públicos é:", o: ["Dever de todos","Algo inútil","Apenas do governo"], c: 0 },
+      { q: "Combater preconceito requer:", o: ["Educação e diálogo","Isolamento","Mais preconceito"], c: 0 },
+      { q: "O que é civismo digital?", o: ["Comportamento respeitoso online","Ofensas anônimas","Invasão de perfis"], c: 0 },
+      { q: "Solidariedade no trabalho significa:", o: ["Apoiar colegas e cooperar","Competir deslealmente","Sabotar"], c: 0 },
+      { q: "O que é direito fundamental?", o: ["Direito essencial garantido a todos","Um luxo","Algo opcional"], c: 0 },
+      { q: "A honestidade pública implica:", o: ["Administração transparente","Corrupção institucionalizada","Sigilo eterno"], c: 0 },
+      { q: "O que é responsabilidade afetiva?", o: ["Cuidar das emoções e compromissos","Ignorar sentimentos","Enganar pessoas"], c: 0 }
+    ];
+
+    // Mensagens de incentivo (várias opções)
+    const incentivosAcerto = [
+      "Excelente! Continue assim!",
+      "Mandou bem! Próxima fase!",
+      "Perfeito — você acertou!",
+      "Show! Acertou com estilo!",
+      "Bacana! Vai pra próxima!"
+    ];
+    const incentivosErro = [
+      "Boa tentativa! Vai na próxima.",
+      "Não foi dessa vez, tente novamente!",
+      "Errou, mas você aprende com isso!",
+      "Fica firme! Próxima pergunta.",
+      "Continue — você consegue!"
+    ];
+
+    // Variáveis do jogo
+    let indice = 0;
+    let pontos = 0;
+    const total = perguntas.length;
+
+    // Elementos DOM
+    const perguntaEl = document.getElementById("pergunta");
+    const opcoesEl = document.getElementById("opcoes");
+    const nextBtn = document.getElementById("nextBtn");
+    const reiniciarBtn = document.getElementById("reiniciarBtn");
+    const statusEl = document.getElementById("status");
+    const bar = document.getElementById("bar");
+    const fimEl = document.getElementById("fim");
+    const jogoEl = document.getElementById("jogo");
+    const resultadoFinal = document.getElementById("resultadoFinal");
+    const jogarNovamente = document.getElementById("jogarNovamente");
+
+    // Funções
+    function atualizarBarra() {
+      const progresso = ((indice) / total) * 100;
+      bar.style.width = progresso + "%";
+    }
+
+    function mostrarPergunta() {
+      atualizarBarra();
+      const p = perguntas[indice];
+      perguntaEl.textContent = Fase ${indice+1} — ${p.q};
+      opcoesEl.innerHTML = "";
+      statusEl.textContent = "";
+
+      p.o.forEach((texto, i) => {
+        const btn = document.createElement("button");
+        btn.className = "opcao";
+        btn.innerText = texto;
+        btn.onclick = () => selecionarResposta(btn, i === p.c);
+        opcoesEl.appendChild(btn);
+      });
+
+      nextBtn.style.display = "none";
+      reiniciarBtn.style.display = "none";
+    }
+
+    function selecionarResposta(btn, correta) {
+      // desabilita todos
+      const botoes = opcoesEl.querySelectorAll("button");
+      botoes.forEach(b => b.disabled = true);
+
+      if (correta) {
+        btn.classList.add("certa");
+        pontos += 1;
+        statusEl.style.color = "var(--good)";
+        statusEl.textContent = randomItem(incentivosAcerto);
+      } else {
+        btn.classList.add("errada");
+        statusEl.style.color = "var(--bad)";
+        statusEl.textContent = randomItem(incentivosErro);
+        // marca correta visualmente
+        const arr = Array.from(botoes);
+        const certo = arr[perguntas[indice].c];
+        if (certo) certo.classList.add("certa");
+      }
+
+      // mostrar botões
+      nextBtn.style.display = "inline-block";
+      reiniciarBtn.style.display = "inline-block";
+    }
+
+    nextBtn.onclick = () => {
+      indice++;
+      if (indice >= total) {
+        fimDoJogo();
+      } else {
+        mostrarPergunta();
+      }
+    };
+
+    reiniciarBtn.onclick = () => {
+      // reinicia a mesma fase (apenas reexibe)
+      mostrarPergunta();
+    };
+
+    function fimDoJogo() {
+      jogoEl.style.display = "none";
+      fimEl.style.display = "block";
+      resultadoFinal.innerText = Você acertou ${pontos} de ${total} perguntas.;
+      bar.style.width = "100%";
+    }
+
+    function jogarDeNovo() {
+      indice = 0; pontos = 0;
+      fimEl.style.display = "none";
+      jogoEl.style.display = "block";
+      mostrarPergunta();
+    }
+
+    function randomItem(arr) {
+      return arr[Math.floor(Math.random()*arr.length)];
+    }
+
+    jogarNovamente.onclick = jogarDeNovo;
+
+    // iniciar jogo
+    mostrarPergunta();
+  </script>
+</body>
+</html>
